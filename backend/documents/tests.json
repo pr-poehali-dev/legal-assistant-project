@@ -1,0 +1,20 @@
+{
+  "tests": [
+    {
+      "name": "Get all documents",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": [],
+      "bodyMatcher": "array"
+    },
+    {
+      "name": "Get documents by category",
+      "method": "GET",
+      "path": "/?category=Постановления",
+      "expectedStatus": 200,
+      "expectedBody": [],
+      "bodyMatcher": "array"
+    }
+  ]
+}

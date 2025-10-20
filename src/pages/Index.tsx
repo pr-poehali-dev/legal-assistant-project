@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -7,8 +7,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/icon';
 
+interface Article {
+  id: number;
+  code: string;
+  title: string;
+  description: string;
+  category: string;
+  punishment: string;
+}
+
 interface Document {
-  id: string;
+  id: number;
   title: string;
   category: string;
   code: string;
@@ -23,54 +32,73 @@ interface Deadline {
   priority: 'high' | 'medium' | 'low';
 }
 
+const ARTICLES_API = 'https://functions.poehali.dev/548d9cd5-f7d1-4b22-9d02-284a5b6a60a6';
+const DOCUMENTS_API = 'https://functions.poehali.dev/6d698c6a-0961-4d17-9256-332c35b53aeb';
+
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('search');
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [searchResults, setSearchResults] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
-  const documents: Document[] = [
-    {
-      id: '1',
-      title: 'Постановление о возбуждении уголовного дела',
-      category: 'Постановления',
-      code: 'УПК РФ ст. 146',
-      description: 'О возбуждении уголовного дела и принятии его к производству'
-    },
-    {
-      id: '2',
-      title: 'Протокол допроса свидетеля',
-      category: 'Протоколы',
-      code: 'УПК РФ ст. 278',
-      description: 'Допрос свидетеля с разъяснением прав и обязанностей'
-    },
-    {
-      id: '3',
-      title: 'Протокол осмотра места происшествия',
-      category: 'Протоколы',
-      code: 'УПК РФ ст. 176-177',
-      description: 'Осмотр места происшествия, местности, помещения'
-    },
-    {
-      id: '4',
-      title: 'Ходатайство об избрании меры пресечения',
-      category: 'Ходатайства',
-      code: 'УПК РФ ст. 108',
-      description: 'Ходатайство об избрании меры пресечения в виде заключения под стражу'
-    },
-    {
-      id: '5',
-      title: 'Постановление о назначении экспертизы',
-      category: 'Постановления',
-      code: 'УПК РФ ст. 195',
-      description: 'О назначении судебной экспертизы'
-    },
-    {
-      id: '6',
-      title: 'Протокол обыска',
-      category: 'Протоколы',
-      code: 'УПК РФ ст. 182',
-      description: 'Обыск в жилище с разъяснением прав участников'
+  useEffect(() => {
+    loadArticles();
+    loadDocuments();
+  }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      searchArticles();
+    } else {
+      setSearchResults([]);
     }
-  ];
+  }, [searchQuery]);
+
+  const loadArticles = async () => {
+    try {
+      const response = await fetch(ARTICLES_API);
+      const data = await response.json();
+      setArticles(data);
+    } catch (error) {
+      console.error('Failed to load articles:', error);
+    }
+  };
+
+  const loadDocuments = async () => {
+    try {
+      const response = await fetch(DOCUMENTS_API);
+      const data = await response.json();
+      setDocuments(data);
+    } catch (error) {
+      console.error('Failed to load documents:', error);
+    }
+  };
+
+  const searchArticles = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${ARTICLES_API}?search=${encodeURIComponent(searchQuery)}`);
+      const data = await response.json();
+      setSearchResults(data);
+    } catch (error) {
+      console.error('Search failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectArticle = async (code: string) => {
+    try {
+      const response = await fetch(`${ARTICLES_API}?code=${encodeURIComponent(code)}`);
+      const data = await response.json();
+      setSelectedArticle(data);
+    } catch (error) {
+      console.error('Failed to load article:', error);
+    }
+  };
 
   const deadlines: Deadline[] = [
     {
@@ -105,12 +133,7 @@ const Index = () => {
     { id: '6', label: 'Продлить срок', icon: 'CalendarClock', color: 'bg-purple-600' }
   ];
 
-  const articles = [
-    { code: '158 УК РФ', title: 'Кража', description: 'Тайное хищение чужого имущества' },
-    { code: '159 УК РФ', title: 'Мошенничество', description: 'Хищение путём обмана или злоупотребления доверием' },
-    { code: '228 УК РФ', title: 'Незаконные приобретение, хранение наркотиков', description: 'В крупном размере' },
-    { code: '264 УК РФ', title: 'Нарушение ПДД', description: 'Повлекшее причинение тяжкого вреда здоровью' }
-  ];
+  const displayArticles = searchResults.length > 0 ? searchResults : articles.slice(0, 10);
 
   const getDaysUntil = (dateStr: string) => {
     const today = new Date();
@@ -223,27 +246,88 @@ const Index = () => {
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 <Icon name="BookOpen" size={20} />
-                Часто используемые статьи
+                {searchQuery ? `Результаты поиска (${displayArticles.length})` : 'Часто используемые статьи'}
               </h2>
-              <div className="grid gap-3">
-                {articles.map((article) => (
-                  <Card key={article.code} className="p-4 hover:border-primary/50 transition-all cursor-pointer">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="outline" className="font-mono text-xs">
-                            {article.code}
-                          </Badge>
-                          <h3 className="font-medium text-foreground">{article.title}</h3>
+              {loading ? (
+                <Card className="p-8 text-center">
+                  <p className="text-muted-foreground">Поиск...</p>
+                </Card>
+              ) : displayArticles.length > 0 ? (
+                <div className="grid gap-3">
+                  {displayArticles.map((article) => (
+                    <Card 
+                      key={article.id} 
+                      className="p-4 hover:border-primary/50 transition-all cursor-pointer"
+                      onClick={() => selectArticle(article.code)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="outline" className="font-mono text-xs">
+                              {article.code}
+                            </Badge>
+                            <h3 className="font-medium text-foreground">{article.title}</h3>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">{article.description}</p>
+                          {article.punishment && (
+                            <div className="flex items-start gap-2 text-xs">
+                              <Badge variant="secondary" className="text-xs">
+                                {article.category}
+                              </Badge>
+                              <span className="text-muted-foreground">{article.punishment}</span>
+                            </div>
+                          )}
                         </div>
-                        <p className="text-sm text-muted-foreground">{article.description}</p>
+                        <Icon name="ExternalLink" size={16} className="text-muted-foreground" />
                       </div>
-                      <Icon name="ExternalLink" size={16} className="text-muted-foreground" />
-                    </div>
-                  </Card>
-                ))}
-              </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : searchQuery ? (
+                <Card className="p-8 text-center">
+                  <Icon name="Search" size={32} className="mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-muted-foreground">Ничего не найдено по запросу "{searchQuery}"</p>
+                </Card>
+              ) : null}
             </div>
+
+            {selectedArticle && (
+              <Card className="p-6 border-primary/30 bg-primary/5">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <Badge variant="outline" className="font-mono mb-2">{selectedArticle.code}</Badge>
+                    <h2 className="text-xl font-bold text-foreground">{selectedArticle.title}</h2>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedArticle(null)}>
+                    <Icon name="X" size={20} />
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Описание</p>
+                    <p className="text-foreground">{selectedArticle.description}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Категория</p>
+                    <Badge variant="secondary">{selectedArticle.category}</Badge>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Санкция</p>
+                    <p className="text-foreground">{selectedArticle.punishment}</p>
+                  </div>
+                  <div className="flex gap-2 pt-3">
+                    <Button className="flex-1">
+                      <Icon name="FileText" size={16} className="mr-2" />
+                      Создать документ
+                    </Button>
+                    <Button variant="outline">
+                      <Icon name="BookOpen" size={16} className="mr-2" />
+                      Судебная практика
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="documents" className="space-y-6">

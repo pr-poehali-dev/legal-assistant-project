@@ -1,0 +1,31 @@
+{
+  "tests": [
+    {
+      "name": "Get all articles",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": [],
+      "bodyMatcher": "array"
+    },
+    {
+      "name": "Search articles by code",
+      "method": "GET",
+      "path": "/?search=158",
+      "expectedStatus": 200,
+      "expectedBody": [],
+      "bodyMatcher": "array"
+    },
+    {
+      "name": "Get specific article",
+      "method": "GET",
+      "path": "/?code=158 УК РФ",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "code": "string",
+        "title": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
