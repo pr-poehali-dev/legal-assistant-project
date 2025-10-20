@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/components/ui/use-toast';
 import { Article } from './types';
+import CourtPracticeModal from './CourtPracticeModal';
 
 interface SearchTabProps {
   searchQuery: string;
@@ -35,6 +37,14 @@ const SearchTab = ({
   setSelectedArticle
 }: SearchTabProps) => {
   const { toast } = useToast();
+  const [isCourtPracticeOpen, setIsCourtPracticeOpen] = useState(false);
+  const [selectedCourtArticle, setSelectedCourtArticle] = useState('');
+
+  const handleShowCourtPractice = () => {
+    if (!selectedArticle) return;
+    setSelectedCourtArticle(selectedArticle.code);
+    setIsCourtPracticeOpen(true);
+  };
 
   const handleExportArticlePDF = () => {
     if (!selectedArticle) return;
@@ -181,14 +191,20 @@ const SearchTab = ({
                 <Icon name="FileDown" size={16} className="mr-2" />
                 Экспорт PDF
               </Button>
-              <Button variant="outline">
-                <Icon name="BookOpen" size={16} className="mr-2" />
+              <Button variant="outline" onClick={handleShowCourtPractice}>
+                <Icon name="Scale" size={16} className="mr-2" />
                 Практика
               </Button>
             </div>
           </div>
         </Card>
       )}
+
+      <CourtPracticeModal
+        isOpen={isCourtPracticeOpen}
+        onClose={() => setIsCourtPracticeOpen(false)}
+        articleCode={selectedCourtArticle}
+      />
     </div>
   );
 };

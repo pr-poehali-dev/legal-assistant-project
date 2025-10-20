@@ -6,6 +6,7 @@ import SearchTab from '@/components/legal/SearchTab';
 import DocumentsTab from '@/components/legal/DocumentsTab';
 import GeneratorTab from '@/components/legal/GeneratorTab';
 import DeadlinesTab from '@/components/legal/DeadlinesTab';
+import PracticeTab from '@/components/legal/PracticeTab';
 import { Article, Document, Deadline, ARTICLES_API, DOCUMENTS_API } from '@/components/legal/types';
 
 const Index = () => {
@@ -105,10 +106,14 @@ const Index = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
             <TabsTrigger value="search" className="gap-2">
               <Icon name="Search" size={16} />
               Поиск
+            </TabsTrigger>
+            <TabsTrigger value="practice" className="gap-2">
+              <Icon name="Scale" size={16} />
+              Практика
             </TabsTrigger>
             <TabsTrigger value="documents" className="gap-2">
               <Icon name="FolderOpen" size={16} />
@@ -134,6 +139,10 @@ const Index = () => {
               selectedArticle={selectedArticle}
               setSelectedArticle={setSelectedArticle}
             />
+          </TabsContent>
+
+          <TabsContent value="practice">
+            <PracticeTab />
           </TabsContent>
 
           <TabsContent value="documents">

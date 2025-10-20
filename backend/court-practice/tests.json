@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "Search court practice by article code",
+      "method": "GET",
+      "path": "/?article_code=158 УК РФ",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "total": "number",
+        "article_code": "string",
+        "cases": []
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Missing article_code parameter",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
