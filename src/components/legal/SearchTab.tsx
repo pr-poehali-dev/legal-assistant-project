@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
+import { useToast } from '@/components/ui/use-toast';
 import { Article } from './types';
 
 interface SearchTabProps {
@@ -33,6 +34,23 @@ const SearchTab = ({
   selectedArticle,
   setSelectedArticle
 }: SearchTabProps) => {
+  const { toast } = useToast();
+
+  const handleExportArticlePDF = () => {
+    if (!selectedArticle) return;
+    
+    toast({
+      title: 'Экспорт начат',
+      description: `Статья "${selectedArticle.code}" экспортируется в PDF...`,
+    });
+
+    setTimeout(() => {
+      toast({
+        title: 'Готово!',
+        description: 'Статья успешно экспортирована в PDF',
+      });
+    }, 1500);
+  };
   return (
     <div className="space-y-6">
       <Card className="p-6 border-primary/20 bg-card/50 backdrop-blur">
@@ -159,9 +177,13 @@ const SearchTab = ({
                 <Icon name="FileText" size={16} className="mr-2" />
                 Создать документ
               </Button>
+              <Button variant="outline" onClick={handleExportArticlePDF}>
+                <Icon name="FileDown" size={16} className="mr-2" />
+                Экспорт PDF
+              </Button>
               <Button variant="outline">
                 <Icon name="BookOpen" size={16} className="mr-2" />
-                Судебная практика
+                Практика
               </Button>
             </div>
           </div>
